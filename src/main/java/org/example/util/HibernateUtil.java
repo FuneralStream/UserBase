@@ -26,7 +26,7 @@ public class HibernateUtil {
             return metadata.getSessionFactoryBuilder().build();
         } catch (Exception ex) {
             if (standardRegistry != null) {
-                StandardServiceRegistryBuilder.destroy(standardRegistry);
+               StandardServiceRegistryBuilder.destroy(standardRegistry);
             }
             throw new ExceptionInInitializerError(ex);
         }
