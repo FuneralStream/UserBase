@@ -12,6 +12,10 @@ public class HibernateUtil {
     @Getter
     private static final SessionFactory sessionFactory = buildSessionFactory();
 
+    private HibernateUtil() {
+        throw new UnsupportedOperationException("Utility class!");
+    }
+
     private static SessionFactory buildSessionFactory() {
         StandardServiceRegistry standardRegistry = null;
         try {
