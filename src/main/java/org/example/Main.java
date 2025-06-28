@@ -16,50 +16,45 @@ public class Main {
     private static final Scanner scanner = new Scanner(System.in);
 
     public static void main(String[] args) {
-        try {
-            boolean running = true;
-            while (running) {
-                System.out.println("\nМеню сервиса пользователей:");
-                System.out.println("1. Создать пользователя");
-                System.out.println("2. Найти пользователя по ID");
-                System.out.println("3. Вывести всех пользователей");
-                System.out.println("4. Обновить пользователя");
-                System.out.println("5. Удалить пользователя");
-                System.out.println("6. Выйти");
-                System.out.print("Выберите действие: ");
+        boolean running = true;
+        while (running) {
+            System.out.println("\nМеню сервиса пользователей:");
+            System.out.println("1. Создать пользователя");
+            System.out.println("2. Найти пользователя по ID");
+            System.out.println("3. Вывести всех пользователей");
+            System.out.println("4. Обновить пользователя");
+            System.out.println("5. Удалить пользователя");
+            System.out.println("6. Выйти");
+            System.out.print("Выберите действие: ");
 
-                int choice = scanner.nextInt();
-                scanner.nextLine();
+            int choice = scanner.nextInt();
+            scanner.nextLine();
 
-                switch (choice) {
-                    case 1:
-                        createUser();
-                        break;
-                    case 2:
-                        findUserById();
-                        break;
-                    case 3:
-                        listAllUsers();
-                        break;
-                    case 4:
-                        updateUser();
-                        break;
-                    case 5:
-                        deleteUser();
-                        break;
-                    case 6:
-                        running = false;
-                        break;
-                    default:
-                        System.out.println("Неверный выбор. Пожалуйста, попробуйте снова.");
-                }
+            switch (choice) {
+                case 1:
+                    createUser();
+                    break;
+                case 2:
+                    findUserById();
+                    break;
+                case 3:
+                    listAllUsers();
+                    break;
+                case 4:
+                    updateUser();
+                    break;
+                case 5:
+                    deleteUser();
+                    break;
+                case 6:
+                    running = false;
+                    break;
+                default:
+                    System.out.println("Неверный выбор. Пожалуйста, попробуйте снова.");
             }
-        } catch (Exception e) {
-            logger.error("Произошла ошибка: ", e);
-        } finally {
-            HibernateUtil.shutdown();
-            scanner.close();
         }
+        HibernateUtil.shutdown();
+        scanner.close();
     }
 
     private static void createUser() {
