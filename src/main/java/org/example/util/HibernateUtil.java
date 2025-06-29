@@ -10,7 +10,7 @@ import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 public class HibernateUtil {
 
     @Getter
-    private static final SessionFactory sessionFactory = buildSessionFactory();
+    private static SessionFactory sessionFactory = buildSessionFactory();
 
     private HibernateUtil() {
         throw new UnsupportedOperationException("Utility class!");
@@ -34,6 +34,10 @@ public class HibernateUtil {
             }
             throw new ExceptionInInitializerError(ex);
         }
+    }
+
+    public static void setSessionFactory(SessionFactory sessionFactory) {
+        HibernateUtil.sessionFactory = sessionFactory;
     }
 
     public static void shutdown() {

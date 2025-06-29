@@ -1,8 +1,9 @@
 package org.example;
 
-import org.example.dao.UserDao;
 import org.example.dao.UserDaoImpl;
 import org.example.entity.User;
+import org.example.service.UserService;
+import org.example.service.UserServiceImpl;
 import org.example.util.HibernateUtil;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -12,8 +13,8 @@ import java.util.Scanner;
 
 public class Main {
     private static final Logger logger = LogManager.getLogger(Main.class);
-    private static final UserDao userDao = new UserDaoImpl();
     private static final Scanner scanner = new Scanner(System.in);
+    private static final UserService userService = new UserServiceImpl(new UserDaoImpl());
 
     public static void main(String[] args) {
         boolean running = true;
@@ -74,7 +75,7 @@ public class Main {
         user.setAge(age);
 
         try {
-            userDao.save(user);
+            userService.save(user);
             System.out.println("Пользователь успешно создан с ID: " + user.getId());
         } catch (Exception e) {
             logger.error("Ошибка создания пользователя: ", e);
@@ -88,7 +89,7 @@ public class Main {
         scanner.nextLine();
 
         try {
-            var user = userDao.findById(id);
+            var user = userService.findById(id);
             if (user.isPresent()) {
                 System.out.println("Пользователь найден: " + user.get());
             } else {
@@ -102,7 +103,7 @@ public class Main {
 
     private static void listAllUsers() {
         try {
-            List<User> users = userDao.findAll();
+            List<User> users = userService.findAll();
             if (users.isEmpty()) {
                 System.out.println("Пользователи не найдены.");
             } else {
@@ -121,7 +122,7 @@ public class Main {
         scanner.nextLine();
 
         try {
-            var userOptional = userDao.findById(id);
+            var userOptional = userService.findById(id);
             if (userOptional.isEmpty()) {
                 System.out.println("Пользователь не найден с ID: " + id);
                 return;
@@ -147,7 +148,7 @@ public class Main {
                 user.setAge(Integer.parseInt(ageInput));
             }
 
-            userDao.update(user);
+            userService.update(user);
             System.out.println("Пользователь успешно обновлён.");
         } catch (Exception e) {
             logger.error("Ошибка обновления пользователя: ", e);
@@ -161,13 +162,13 @@ public class Main {
         scanner.nextLine();
 
         try {
-            var userOptional = userDao.findById(id);
+            var userOptional = userService.findById(id);
             if (userOptional.isEmpty()) {
                 System.out.println("Пользователь не найден с ID: " + id);
                 return;
             }
 
-            userDao.delete(userOptional.get());
+            userService.delete(userOptional.get());
             System.out.println("Пользователь успешно удалён.");
         } catch (Exception e) {
             logger.error("Ошибка удаления пользователя: ", e);

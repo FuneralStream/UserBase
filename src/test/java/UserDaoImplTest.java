@@ -2,7 +2,6 @@ import org.example.dao.UserDao;
 import org.example.dao.UserDaoImpl;
 import org.example.entity.User;
 import org.example.util.HibernateUtil;
-import org.hibernate.Transaction;
 import org.junit.jupiter.api.*;
 import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.junit.jupiter.Container;
@@ -15,7 +14,8 @@ import static org.junit.jupiter.api.Assertions.*;
 @Testcontainers
 class UserDaoImplTest {
 
-    private static final PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:16")
+    @Container
+    private static final PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:15-alpine")
             .withDatabaseName("test_db")
             .withUsername("test")
             .withPassword("test");
@@ -23,32 +23,29 @@ class UserDaoImplTest {
     private static UserDao userDao;
 
     @BeforeAll
-    static void setUp() {
-        postgres.start();
+    static void beforeAll() {
         System.setProperty("hibernate.connection.url", postgres.getJdbcUrl());
         System.setProperty("hibernate.connection.username", postgres.getUsername());
         System.setProperty("hibernate.connection.password", postgres.getPassword());
-
-        userDao = new UserDaoImpl();
+        System.setProperty("hibernate.hbm2ddl.auto", "create");
     }
 
     @AfterAll
     static void afterAll() {
-        postgres.stop();
+        HibernateUtil.shutdown();
     }
 
     @BeforeEach
+    void setUp() {
+        userDao = new UserDaoImpl();
+        clearDB();
+    }
+
     void clearDB() {
-        Transaction transaction = null;
         try (var session = HibernateUtil.getSessionFactory().openSession()) {
-            transaction = session.beginTransaction();
-            session.createMutationQuery("DELETE FROM User").executeUpdate();
+            var transaction = session.beginTransaction();
+            session.createQuery("DELETE FROM User").executeUpdate();
             transaction.commit();
-        } catch (Exception e) {
-            if (transaction != null) {
-                transaction.rollback();
-            }
-            throw e;
         }
     }
 
