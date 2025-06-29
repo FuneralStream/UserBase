@@ -8,6 +8,7 @@ import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
 import java.util.List;
+import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -41,7 +42,7 @@ class UserDaoImplTest {
         clearDB();
     }
 
-    void clearDB() {
+    private void clearDB() {
         try (var session = HibernateUtil.getSessionFactory().openSession()) {
             var transaction = session.beginTransaction();
             session.createQuery("DELETE FROM User").executeUpdate();
@@ -57,9 +58,14 @@ class UserDaoImplTest {
                 .age(29)
                 .build();
 
-        userDao.save(user);
-        assertTrue(user.getId() >= 0);
-        assertEquals("Daniil Medvedev", user.getName());
+
+        User savedUser = userDao.save(user);
+        Optional<User> dbUser = userDao.findById((long) savedUser.getId());
+
+        assertTrue(dbUser.isPresent());
+        assertEquals(user.getName(), dbUser.get().getName());
+        assertEquals(user.getEmail(), dbUser.get().getEmail());
+        assertEquals(user.getAge(), dbUser.get().getAge());
     }
 
     @Test
@@ -109,13 +115,17 @@ class UserDaoImplTest {
 
     @Test
     void deleteTest() {
-        User user = userDao.save(User.builder()
+        User user = User.builder()
                 .name("Hamad Medjedovic")
                 .email("medjedovic@mail.ru")
                 .age(21)
-                .build());
+                .build();
 
-        userDao.delete(user);
-        assertTrue(userDao.findById((long) user.getId()).isEmpty());
+        User savedUser = userDao.save(user);
+        assertTrue(userDao.findById((long) savedUser.getId()).isPresent());
+
+
+        userDao.delete(savedUser);
+        assertTrue(userDao.findById((long) savedUser.getId()).isEmpty());
     }
 }
