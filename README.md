@@ -1,1 +1,1 @@
-Консольное приложение(user-service) на Java, использующее Hibernate для взаимодействия с PostgreSQL, без использования Spring. Приложение поддерживает базовые операции CRUD (Create, Read, Update, Delete) над сущностью User.
+Консольное приложение(user-service) на Java, использующее Hibernate для взаимодействия с PostgreSQL, без использования Spring. Приложение поддерживает базовые операции CRUD (Create, Read, Update, Delete) над сущностью User. Реализованы тесты.
