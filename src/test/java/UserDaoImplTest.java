@@ -41,18 +41,8 @@ class UserDaoImplTest {
     @BeforeEach
     void setUp() {
         userDao = new UserDaoImpl();
-        // clearDB();
         insertTestData();
     }
-    /*
-    private void clearDB() {
-        try (var session = HibernateUtil.getSessionFactory().openSession()) {
-            var transaction = session.beginTransaction();
-            session.createQuery("DELETE FROM User").executeUpdate();
-            transaction.commit();
-        }
-    }
-     */
 
     private void insertTestData() {
         try (var session = HibernateUtil.getSessionFactory().openSession()) {
