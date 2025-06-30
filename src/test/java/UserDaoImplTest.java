@@ -2,6 +2,7 @@ import org.example.dao.UserDao;
 import org.example.dao.UserDaoImpl;
 import org.example.entity.User;
 import org.example.util.HibernateUtil;
+import org.hibernate.Session;
 import org.junit.jupiter.api.*;
 import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.junit.jupiter.Container;
@@ -22,13 +23,14 @@ class UserDaoImplTest {
             .withPassword("test");
 
     private static UserDao userDao;
+    private User testUser;
 
     @BeforeAll
     static void beforeAll() {
         System.setProperty("hibernate.connection.url", postgres.getJdbcUrl());
         System.setProperty("hibernate.connection.username", postgres.getUsername());
         System.setProperty("hibernate.connection.password", postgres.getPassword());
-        System.setProperty("hibernate.hbm2ddl.auto", "create");
+        System.setProperty("hibernate.hbm2ddl.auto", "create-drop");
     }
 
     @AfterAll
@@ -39,9 +41,10 @@ class UserDaoImplTest {
     @BeforeEach
     void setUp() {
         userDao = new UserDaoImpl();
-        clearDB();
+        // clearDB();
+        insertTestData();
     }
-
+    /*
     private void clearDB() {
         try (var session = HibernateUtil.getSessionFactory().openSession()) {
             var transaction = session.beginTransaction();
@@ -49,83 +52,72 @@ class UserDaoImplTest {
             transaction.commit();
         }
     }
+     */
+
+    private void insertTestData() {
+        try (var session = HibernateUtil.getSessionFactory().openSession()) {
+            var transaction = session.beginTransaction();
+            session.createQuery("DELETE FROM User").executeUpdate();
+
+            testUser = User.builder()
+                    .name("Daniil Medvedev")
+                    .email("medvedev@mail.ru")
+                    .age(29)
+                    .build();
+
+            session.persist(testUser);
+            transaction.commit();
+            session.refresh(testUser);
+        }
+    }
 
     @Test
     void saveTest() {
         User user = User.builder()
-                .name("Daniil Medvedev")
-                .email("medvedev@mail.ru")
-                .age(29)
+                .name("Andrey Rublev")
+                .email("rublev@mail.ru")
+                .age(27)
                 .build();
 
 
         User savedUser = userDao.save(user);
-        Optional<User> dbUser = userDao.findById((long) savedUser.getId());
+        try (Session session = HibernateUtil.getSessionFactory().openSession()) {
+            Optional<User> dbUser = session.createQuery(
+                            "FROM User WHERE email = :email", User.class)
+                    .setParameter("email", user.getEmail())
+                    .uniqueResultOptional();
 
-        assertTrue(dbUser.isPresent());
-        assertEquals(user.getName(), dbUser.get().getName());
-        assertEquals(user.getEmail(), dbUser.get().getEmail());
-        assertEquals(user.getAge(), dbUser.get().getAge());
+            assertTrue(dbUser.isPresent());
+            assertEquals("Andrey Rublev", dbUser.get().getName());
+            assertEquals("rublev@mail.ru", dbUser.get().getEmail());
+            assertEquals(27, dbUser.get().getAge());
+        }
     }
 
     @Test
     void findByIdTest() {
-        User user = userDao.save(User.builder()
-                .name("Andrey Rublev")
-                .email("rublev@mail.ru")
-                .age(27)
-                .build());
-
-
-        assertNotNull(userDao.findById((long) user.getId()));
+        assertNotNull(userDao.findById((long) testUser.getId()));
     }
 
     @Test
     void findAllTest() {
-        userDao.save(User.builder()
-                .name("Alexander Bublik")
-                .email("bublik@mail.ru")
-                .age(28)
-                .build());
-
-        userDao.save(User.builder()
-                .name("Jannik Sinner")
-                .email("sinner@mail.ru")
-                .age(23)
-                .build());
-
         List<User> users = userDao.findAll();
-        assertEquals(2, users.size());
+        assertEquals(1, users.size());
     }
 
     @Test
     void updateTest() {
-        User user = userDao.save(User.builder()
-                .name("Novak Djokovic")
-                .email("djokovic@mail.ru")
-                .age(36)
-                .build());
+        testUser.setName("Novak");
+        userDao.update(testUser);
 
-        user.setName("Novak");
-        userDao.update(user);
-
-        assertTrue((userDao.findById((long) user.getId()).isPresent()));
-        assertEquals("Novak", userDao.findById((long) user.getId()).get().getName());
+        assertTrue((userDao.findById((long) testUser.getId()).isPresent()));
+        assertEquals("Novak", userDao.findById((long) testUser.getId()).get().getName());
     }
 
     @Test
     void deleteTest() {
-        User user = User.builder()
-                .name("Hamad Medjedovic")
-                .email("medjedovic@mail.ru")
-                .age(21)
-                .build();
-
-        User savedUser = userDao.save(user);
-        assertTrue(userDao.findById((long) savedUser.getId()).isPresent());
-
-
-        userDao.delete(savedUser);
-        assertTrue(userDao.findById((long) savedUser.getId()).isEmpty());
+        assertTrue(userDao.findById((long) testUser.getId()).isPresent());
+        userDao.delete(testUser);
+        assertTrue(userDao.findById((long) testUser.getId()).isEmpty());
     }
 }
