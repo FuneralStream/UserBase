@@ -61,6 +61,14 @@ class UserDaoImplTest {
         }
     }
 
+    private Optional<User> findById(long id) {
+        try (var session = HibernateUtil.getSessionFactory().openSession()) {
+            var query = session.createQuery("FROM User WHERE id = :id", User.class);
+            query.setParameter("id", id);
+            return Optional.ofNullable(query.uniqueResult());
+        }
+    }
+
     @Test
     void saveTest() {
         User user = User.builder()
@@ -100,14 +108,14 @@ class UserDaoImplTest {
         testUser.setName("Novak");
         userDao.update(testUser);
 
-        assertTrue((userDao.findById((long) testUser.getId()).isPresent()));
-        assertEquals("Novak", userDao.findById((long) testUser.getId()).get().getName());
+        assertTrue(findById((long) testUser.getId()).isPresent());
+        assertEquals("Novak", findById((long) testUser.getId()).get().getName());
     }
 
     @Test
     void deleteTest() {
-        assertTrue(userDao.findById((long) testUser.getId()).isPresent());
+        assertTrue(findById((long) testUser.getId()).isPresent());
         userDao.delete(testUser);
-        assertTrue(userDao.findById((long) testUser.getId()).isEmpty());
+        assertTrue(findById((long) testUser.getId()).isEmpty());
     }
 }
