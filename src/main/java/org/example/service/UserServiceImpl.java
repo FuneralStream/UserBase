@@ -1,14 +1,15 @@
 package org.example.service;
 
-import org.example.dao.UserDao;
 import org.example.entity.User;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Optional;
 import java.util.Scanner;
 
+@Service
 public class UserServiceImpl implements UserService {
     private static final Logger logger = LogManager.getLogger(UserServiceImpl.class);
     private static final Scanner scanner = new Scanner(System.in);
