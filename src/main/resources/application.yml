@@ -7,7 +7,7 @@ spring:
     username: ${DB_USERNAME:postgres}
   jpa:
     hibernate:
-      ddl-auto: create-drop
+      ddl-auto: update
       show-sql: true
     properties:
       hibernate:
