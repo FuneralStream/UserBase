@@ -1,0 +1,17 @@
+spring:
+  application:
+    name: UserBase
+  datasource:
+    password: ${DB_PASSWORD:274565}
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/user_base}
+    username: ${DB_USERNAME:postgres}
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+      show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+server:
+  port: 8081

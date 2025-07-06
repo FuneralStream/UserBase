@@ -1,50 +1,58 @@
 package org.example.service;
 
+import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.example.dto.UserDto;
 import org.example.entity.User;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import org.example.mapper.UserMapper;
 import org.example.repository.UserRepository;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.Optional;
-import java.util.Scanner;
 
 @Service
 @Transactional
 @RequiredArgsConstructor
 public class UserServiceImpl implements UserService {
 
-    @Autowired
     private final UserRepository userRepository;
-
+    private final UserMapper userMapper;
 
     @Override
     public List<UserDto> findAll() {
-        return List.of();
+        return userMapper.toDtos(userRepository.findAll());
     }
 
     @Override
     public UserDto findById(Long id) {
-        return null;
+        return userRepository.findById(id)
+                .map(userMapper::toDto)
+                .orElseThrow(() -> new EntityNotFoundException("Пользователь не найден под id: " + id));
     }
 
     @Override
     public UserDto create(UserDto dto) {
-        return null;
+        return userMapper.toDto(userRepository.save(userMapper.fromDto(dto)));
     }
 
     @Override
     public UserDto update(Long id, UserDto dto) {
-        return null;
+        User modifyingUser = userRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Пользователь не найден под id: " + id));
+
+        userMapper.updateFromDto(dto, modifyingUser);
+
+        User updatedUser = userRepository.save(modifyingUser);
+        return userMapper.toDto(updatedUser);
     }
 
     @Override
     public void delete(Long id) {
-
+        userRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Пользователь не найден под id: " + id));
+        userRepository.deleteById(id);
     }
 }
+
+
