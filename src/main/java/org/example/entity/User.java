@@ -5,7 +5,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.hibernate.annotations.CreationTimestamp;
+import org.springframework.data.annotation.CreatedDate;
 
 import java.time.LocalDateTime;
 
@@ -19,12 +19,12 @@ public class User {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private int id;
+    private Long id;
 
     @Column(nullable = false)
     private int age;
 
-    @CreationTimestamp
+    @CreatedDate
     @Column(nullable = false)
     private LocalDateTime created_at;
 
@@ -33,6 +33,5 @@ public class User {
 
     @Column(nullable = false)
     private String name;
-
 
 }
