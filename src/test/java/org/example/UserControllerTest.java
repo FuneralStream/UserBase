@@ -1,6 +1,7 @@
 package org.example;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import jakarta.persistence.EntityNotFoundException;
 import org.example.controller.UserController;
 import org.example.dto.UserDto;
 import org.example.service.UserService;
@@ -15,7 +16,6 @@ import org.springframework.test.web.servlet.MockMvc;
 import java.time.LocalDateTime;
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
@@ -37,7 +37,7 @@ class UserControllerTest {
     @Autowired
     private ObjectMapper objectMapper;
 
-    @DisplayName("Пользователь найден по ID")
+    @DisplayName("Пользователь найден по ID, 200 OK")
     @Test
     void getOne_whenUserExist() throws Exception {
         UserDto userDto = new UserDto(1L, "Andrey", "andrey@mail.ru", 25, LocalDateTime.now());
@@ -49,16 +49,16 @@ class UserControllerTest {
                 .andExpect(jsonPath("$.email").value("andrey@mail.ru"));
     }
 
-    @DisplayName("Такого пользователя нет")
+    @DisplayName("Такого пользователя нет, 404 Not Found")
     @Test
     void getOne_whenUserNotExist() throws Exception {
-        given(userService.findById(999L)).willThrow(new IllegalArgumentException());
+        given(userService.findById(999L)).willThrow(new EntityNotFoundException());
 
         mockMvc.perform(get("/users/999"))
-                .andExpect(result -> assertTrue(result.getResolvedException() instanceof IllegalArgumentException));
+                .andExpect(status().isNotFound());
     }
 
-    @DisplayName("Список пользователей")
+    @DisplayName("Список пользователей, 200 OK")
     @Test
     void getAllUsers() throws Exception {
         List<UserDto> users = List.of(
@@ -72,7 +72,7 @@ class UserControllerTest {
                 .andExpect(jsonPath("$.length()").value(2));
     }
 
-    @DisplayName("Создание пользователя")
+    @DisplayName("Создание пользователя, 201 Created")
     @Test
     void create() throws Exception {
         UserDto toCreate = new UserDto(null, "Andrey", "andrey@mail.ru", 25, LocalDateTime.now());
@@ -87,7 +87,7 @@ class UserControllerTest {
                 .andExpect(jsonPath("$.id").value(10));
     }
 
-    @DisplayName("Обновление пользователя")
+    @DisplayName("Обновление пользователя, 200 OK")
     @Test
     void update_whenUserExist() throws Exception {
         UserDto update = new UserDto(null, "Andrey", "andrey@mail.ru", 25, LocalDateTime.now());
@@ -102,19 +102,19 @@ class UserControllerTest {
                 .andExpect(jsonPath("$.name").value("Anton"));
     }
 
-    @DisplayName("При обновлении пользователь не найден")
+    @DisplayName("При обновлении пользователь не найден, 404 Not Found")
     @Test
     void update_whenUserIsNotExist() throws Exception {
         given(userService.update(eq(999L), any(UserDto.class)))
-                .willThrow(new IllegalArgumentException());
+                .willThrow(new EntityNotFoundException());
 
         mockMvc.perform(put("/users/999")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(new UserDto(1L, "Andrey", "andrey@mail.ru", 25, LocalDateTime.now()))))
-                .andExpect(result -> assertTrue(result.getResolvedException() instanceof IllegalArgumentException));
+                .andExpect(status().isNotFound());
     }
 
-    @DisplayName("Успешное удаление пользователя")
+    @DisplayName("Успешное удаление пользователя, 204 No Content")
     @Test
     void deleteSuccess_whenUserExist() throws Exception {
         doNothing().when(userService).delete(1L);
@@ -123,12 +123,35 @@ class UserControllerTest {
                 .andExpect(status().isNoContent());
     }
 
-    @DisplayName("При удалении пользователь не найден")
+    @DisplayName("При удалении пользователь не найден, 404 Not Found")
     @Test
     void delete_whenUserIsNotExist() throws Exception {
-        doThrow(new IllegalArgumentException()).when(userService).delete(999L);
+        doThrow(new EntityNotFoundException()).when(userService).delete(999L);
 
         mockMvc.perform(delete("/users/999"))
-                .andExpect(result -> assertTrue(result.getResolvedException() instanceof IllegalArgumentException));
+                .andExpect(status().isNotFound());
+    }
+
+    @DisplayName("Создание пользователя с невалидными данными, 400 Bad Request")
+    @Test
+    void create_withInvalidData_returns400() throws Exception {
+        UserDto invalidUser = new UserDto(null, null, null, null, null);
+
+        given(userService.create(any(UserDto.class)))
+                .willThrow(new IllegalArgumentException());
+
+        mockMvc.perform(post("/users")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(invalidUser)))
+                .andExpect(status().isBadRequest());
+    }
+
+    @DisplayName("Внутренняя ошибка сервера, 500 Internal Server Error")
+    @Test
+    void internalServerError() throws Exception {
+        given(userService.findAll()).willThrow(new RuntimeException());
+
+        mockMvc.perform(get("/users"))
+                .andExpect(status().isInternalServerError());
     }
 }

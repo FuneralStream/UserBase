@@ -50,7 +50,7 @@ public class UserServiceImpl implements UserService {
     @Override
     public void delete(Long id) {
         userRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Пользователь не найден под id: " + id));
+                .orElseThrow(() -> new EntityNotFoundException("Пользователь не найден под id: " + id));
         userRepository.deleteById(id);
     }
 }
